@@ -252,7 +252,7 @@ function TaskRow({
   return (
     <div
       className={[
-        "flex items-start gap-4 py-4 px-2 border-b border-white/10 hover:bg-white/5 cursor-pointer transition-colors",
+        "flex items-start gap-4 py-4 px-2 hover:bg-white/10 hover:rounded-lg cursor-pointer transition-all",
       ].join(" ")}
     >
       <Checkbox checked={done} onChange={() => onToggle(task.id)} />
