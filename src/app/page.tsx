@@ -243,7 +243,7 @@ function TaskRow({
     labelClass = "text-[#CD7253]";
   } else if (ctx === "completed") {
     label = `Completed: ${fmtStatus(datePart(task.updated_at))}`;
-    labelClass = "text-white";
+    labelClass = "text-[#C2C0B6]";
   } else {
     label = "Unscheduled";
     labelClass = "text-[#CD7253]";
