@@ -164,7 +164,7 @@ function Empty({ message }: { message: string }) {
 
 function ProjectPill({ name }: { name: string }) {
   return (
-    <span className="inline-block text-xs text-[#CD7253] rounded-full px-3 py-0.5 bg-[#CD7253]/10 border border-[#CD7253]/20 mt-2">
+    <span className="inline-block text-xs text-white rounded-full px-3 py-0.5 bg-[#30302E] mt-2">
       {name}
     </span>
   );
