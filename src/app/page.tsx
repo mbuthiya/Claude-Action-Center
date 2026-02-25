@@ -632,17 +632,17 @@ export default function Home() {
       </div>
 
       {/* ── Constrained content area ── */}
-      <div className="max-w-160">
+      <div className="w-1/2">
 
         {/* ── Tab navigation ── */}
         <div className="border-b border-white/10">
-          <div className="flex">
+          <div className="flex w-full">
             {TABS.map(({ key, label }) => (
               <button
                 key={key}
                 onClick={() => setActiveTab(key)}
                 className={[
-                  "px-4 py-3 text-base font-semibold border-b-2 -mb-px transition-colors whitespace-nowrap cursor-pointer",
+                  "flex-1 text-center py-3 text-base font-semibold border-b-2 -mb-px transition-colors whitespace-nowrap cursor-pointer",
                   activeTab === key
                     ? "text-[#CD7253] border-[#CD7253]"
                     : "text-[#C2C0B6] border-transparent hover:text-white",
