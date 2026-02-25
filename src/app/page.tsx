@@ -164,7 +164,7 @@ function Empty({ message }: { message: string }) {
 
 function ProjectPill({ name }: { name: string }) {
   return (
-    <span className="inline-block text-xs text-white rounded-full px-3 py-0.5 bg-[#30302E] mt-2">
+    <span className="inline-block text-xs text-white rounded-full px-4 py-1 bg-[#30302E] mt-2">
       {name}
     </span>
   );
@@ -253,7 +253,6 @@ function TaskRow({
     <div
       className={[
         "flex items-start gap-4 py-4 px-2 border-b border-white/10 hover:bg-white/5 cursor-pointer transition-colors",
-        done ? "opacity-60" : "",
       ].join(" ")}
     >
       <Checkbox checked={done} onChange={() => onToggle(task.id)} />
@@ -293,7 +292,7 @@ function SectionHead({
 }) {
   return (
     <div className="flex items-center justify-between mb-4">
-      <h2 className="text-lg font-semibold italic text-white">{title}</h2>
+      <h2 className="text-lg font-semibold italic text-[#C2C0B6]">{title}</h2>
       {range && (
         <span className="text-sm text-[#C2C0B6] italic">{range}</span>
       )}
@@ -409,7 +408,7 @@ function ScheduledTab({
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold italic text-white">Scheduled</h2>
+        <h2 className="text-lg font-semibold italic text-[#C2C0B6]">Scheduled</h2>
         <button
           onClick={() =>
             setSort((s) => (s === "closest" ? "furthest" : "closest"))
@@ -457,7 +456,7 @@ function CompletedTab({
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold italic text-white">Completed</h2>
+        <h2 className="text-lg font-semibold italic text-[#C2C0B6]">Completed</h2>
         <div className="flex items-center">
           {dateFilter ? (
             <button
@@ -518,7 +517,7 @@ function UnscheduledTab({
 
   return (
     <div>
-      <h2 className="text-lg font-semibold italic text-white mb-4">
+      <h2 className="text-lg font-semibold italic text-[#C2C0B6] mb-4">
         Unscheduled
       </h2>
       {unscheduled.length === 0 ? (
