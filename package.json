@@ -1,0 +1,12 @@
+{
+  "name": "claude-action-center",
+  "private": true,
+  "workspaces": [
+    "action-center-app",
+    "mcp-server"
+  ],
+  "scripts": {
+    "dev": "cd action-center-app && bun run dev",
+    "mcp": "cd mcp-server && bun run start"
+  }
+}
