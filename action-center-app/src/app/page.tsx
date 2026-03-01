@@ -293,14 +293,24 @@ function TaskRow({
   ctx,
   onToggle,
   onReschedule,
+  onReopen,
 }: {
   task: Task;
   ctx: RowCtx;
   onToggle: (id: string) => void;
   onReschedule: (id: string, newDate: string) => void;
+  onReopen?: (id: string, newDate: string) => void;
 }) {
   const done = task.status === "done";
   const [tooltipOpen, setTooltipOpen] = useState(false);
+
+  function handleCheckboxClick() {
+    if (done && onReopen) {
+      setTooltipOpen(true);
+    } else {
+      onToggle(task.id);
+    }
+  }
 
   let label = "";
   let labelClass = "text-[#CD7253]";
@@ -331,7 +341,7 @@ function TaskRow({
         "flex items-start gap-4 py-4 px-2 hover:bg-white/10 hover:rounded-lg cursor-pointer transition-all",
       ].join(" ")}
     >
-      <Checkbox checked={done} onChange={() => onToggle(task.id)} />
+      <Checkbox checked={done} onChange={handleCheckboxClick} />
       <div className="flex-1 min-w-0">
         <p
           className={[
@@ -365,15 +375,27 @@ function TaskRow({
               className="fixed inset-0 z-40"
               onClick={() => setTooltipOpen(false)}
             />
-            <RescheduleTooltip
-              currentDate={task.due_date}
-              labelText={ctx === "unscheduled" ? "Set due date" : "Update due date"}
-              buttonText={ctx === "unscheduled" ? "Schedule task" : "Reschedule task"}
-              onReschedule={(newDate) => {
-                onReschedule(task.id, newDate);
-                setTooltipOpen(false);
-              }}
-            />
+            {done ? (
+              <RescheduleTooltip
+                currentDate={task.due_date}
+                labelText="Set new due date"
+                buttonText="Reopen task"
+                onReschedule={(newDate) => {
+                  onReopen!(task.id, newDate);
+                  setTooltipOpen(false);
+                }}
+              />
+            ) : (
+              <RescheduleTooltip
+                currentDate={task.due_date}
+                labelText={ctx === "unscheduled" ? "Set due date" : "Update due date"}
+                buttonText={ctx === "unscheduled" ? "Schedule task" : "Reschedule task"}
+                onReschedule={(newDate) => {
+                  onReschedule(task.id, newDate);
+                  setTooltipOpen(false);
+                }}
+              />
+            )}
           </>
         )}
       </div>
@@ -599,10 +621,12 @@ function CompletedTab({
   tasks,
   onToggle,
   onReschedule,
+  onReopen,
 }: {
   tasks: Task[];
   onToggle: (id: string) => void;
   onReschedule: (id: string, newDate: string) => void;
+  onReopen: (id: string, newDate: string) => void;
 }) {
   const [dateFilter, setDateFilter] = useState("");
   const [filterTooltipOpen, setFilterTooltipOpen] = useState(false);
@@ -666,6 +690,7 @@ function CompletedTab({
             ctx="completed"
             onToggle={onToggle}
             onReschedule={onReschedule}
+            onReopen={onReopen}
           />
         ))
       )}
@@ -791,6 +816,32 @@ export default function Home() {
     }
   }
 
+  async function handleReopen(id: string, newDate: string) {
+    // Optimistic update: mark as pending with new due date
+    setTasks((prev) =>
+      prev.map((t) =>
+        t.id === id
+          ? { ...t, status: "pending", due_date: newDate, updated_at: new Date().toISOString() }
+          : t
+      )
+    );
+    setToast("Task reopened and rescheduled");
+
+    try {
+      const res = await fetch(`/api/tasks/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "pending", due_date: newDate }),
+      });
+      if (res.ok) {
+        const updated: Task = await res.json();
+        setTasks((prev) => prev.map((t) => (t.id === id ? updated : t)));
+      }
+    } catch {
+      // Keep optimistic state; toast already shown
+    }
+  }
+
   async function handleReschedule(id: string, newDate: string) {
     // Optimistic update
     setTasks((prev) =>
@@ -897,6 +948,7 @@ export default function Home() {
                   tasks={tasks}
                   onToggle={handleToggle}
                   onReschedule={handleReschedule}
+                  onReopen={handleReopen}
                 />
               )}
               {activeTab === "unscheduled" && (
