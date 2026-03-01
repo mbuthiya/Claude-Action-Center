@@ -215,18 +215,92 @@ function Checkbox({
   );
 }
 
+// ─── Reschedule tooltip ───────────────────────────────────────────────────────
+
+function RescheduleTooltip({
+  currentDate,
+  labelText,
+  buttonText,
+  onReschedule,
+}: {
+  currentDate: string | null;
+  labelText: string;
+  buttonText: string;
+  onReschedule: (newDate: string) => void;
+}) {
+  const [newDate, setNewDate] = useState(currentDate ?? "");
+
+  return (
+    <div
+      className="absolute left-[calc(100%+8px)] top-0 z-50 rounded-xl flex flex-col gap-4"
+      style={{
+        width: 328,
+        backgroundColor: "#262624",
+        padding: "24px 16px",
+        boxShadow: "0 0 20px rgba(255,255,255,0.08)",
+      }}
+    >
+      <div className="flex flex-col gap-2">
+        <label style={{ fontSize: 14, color: "#ffffff" }}>
+          {labelText}
+        </label>
+        <input
+          type="date"
+          value={newDate}
+          onChange={(e) => setNewDate(e.target.value)}
+          className="w-full rounded-lg px-3 py-2 outline-none border border-white/10"
+          style={{
+            backgroundColor: "#30302E",
+            color: "#ffffff",
+            fontSize: 16,
+            colorScheme: "dark",
+          }}
+        />
+      </div>
+      <button
+        onClick={() => {
+          if (newDate) onReschedule(newDate);
+        }}
+        className="w-full py-3 rounded-full text-white transition-opacity hover:opacity-90 cursor-pointer"
+        style={{ backgroundColor: "#CD7253", fontSize: 16, fontWeight: 500 }}
+      >
+        {buttonText}
+      </button>
+    </div>
+  );
+}
+
+// ─── Reschedule toast ─────────────────────────────────────────────────────────
+
+function RescheduleToast({ message }: { message: string }) {
+  return (
+    <div
+      className="fixed top-6 right-6 z-50 text-white text-sm rounded-lg animate-fade-in"
+      style={{
+        backgroundColor: "#30302E",
+        padding: "8px 24px",
+      }}
+    >
+      {message}
+    </div>
+  );
+}
+
 // ─── Task row ─────────────────────────────────────────────────────────────────
 
 function TaskRow({
   task,
   ctx,
   onToggle,
+  onReschedule,
 }: {
   task: Task;
   ctx: RowCtx;
   onToggle: (id: string) => void;
+  onReschedule: (id: string, newDate: string) => void;
 }) {
   const done = task.status === "done";
+  const [tooltipOpen, setTooltipOpen] = useState(false);
 
   let label = "";
   let labelClass = "text-[#CD7253]";
@@ -248,6 +322,8 @@ function TaskRow({
     label = "Unscheduled";
     labelClass = "text-[#CD7253]";
   }
+
+  const canReschedule = ctx !== "completed";
 
   return (
     <div
@@ -272,11 +348,35 @@ function TaskRow({
         )}
         {task.project && <ProjectPill name={task.project} />}
       </div>
-      <span
-        className={`shrink-0 text-xs font-semibold mt-0.5 whitespace-nowrap ${labelClass}`}
-      >
-        {label}
-      </span>
+
+      {/* Due date label — clickable to open reschedule tooltip */}
+      <div className="relative shrink-0 mt-0.5">
+        <span
+          className={`text-xs font-semibold whitespace-nowrap ${labelClass} ${canReschedule ? "cursor-pointer" : ""}`}
+          onClick={canReschedule ? () => setTooltipOpen(true) : undefined}
+        >
+          {label}
+        </span>
+
+        {tooltipOpen && (
+          <>
+            {/* Invisible backdrop to close tooltip on outside click */}
+            <div
+              className="fixed inset-0 z-40"
+              onClick={() => setTooltipOpen(false)}
+            />
+            <RescheduleTooltip
+              currentDate={task.due_date}
+              labelText={ctx === "unscheduled" ? "Set due date" : "Update due date"}
+              buttonText={ctx === "unscheduled" ? "Schedule task" : "Reschedule task"}
+              onReschedule={(newDate) => {
+                onReschedule(task.id, newDate);
+                setTooltipOpen(false);
+              }}
+            />
+          </>
+        )}
+      </div>
     </div>
   );
 }
@@ -305,11 +405,13 @@ function SectionHead({
 function UpcomingTab({
   tasks,
   onToggle,
+  onReschedule,
   today,
   todayPlus6,
 }: {
   tasks: Task[];
   onToggle: (id: string) => void;
+  onReschedule: (id: string, newDate: string) => void;
   today: string;
   todayPlus6: string;
 }) {
@@ -333,7 +435,13 @@ function UpcomingTab({
         <section>
           <SectionHead title="Overdue" range={fmtSection(today)} />
           {overdue.map((t) => (
-            <TaskRow key={t.id} task={t} ctx="overdue" onToggle={onToggle} />
+            <TaskRow
+              key={t.id}
+              task={t}
+              ctx="overdue"
+              onToggle={onToggle}
+              onReschedule={onReschedule}
+            />
           ))}
         </section>
       )}
@@ -349,6 +457,7 @@ function UpcomingTab({
               task={t}
               ctx="due-today"
               onToggle={onToggle}
+              onReschedule={onReschedule}
             />
           ))
         )}
@@ -368,6 +477,7 @@ function UpcomingTab({
               task={t}
               ctx="upcoming"
               onToggle={onToggle}
+              onReschedule={onReschedule}
             />
           ))
         )}
@@ -381,10 +491,12 @@ function UpcomingTab({
 function ScheduledTab({
   tasks,
   onToggle,
+  onReschedule,
   todayPlus7,
 }: {
   tasks: Task[];
   onToggle: (id: string) => void;
+  onReschedule: (id: string, newDate: string) => void;
   todayPlus7: string;
 }) {
   const [sort, setSort] = useState<"closest" | "furthest">("closest");
@@ -430,6 +542,7 @@ function ScheduledTab({
             task={t}
             ctx="scheduled"
             onToggle={onToggle}
+            onReschedule={onReschedule}
           />
         ))
       )}
@@ -442,9 +555,11 @@ function ScheduledTab({
 function CompletedTab({
   tasks,
   onToggle,
+  onReschedule,
 }: {
   tasks: Task[];
   onToggle: (id: string) => void;
+  onReschedule: (id: string, newDate: string) => void;
 }) {
   const [dateFilter, setDateFilter] = useState("");
 
@@ -495,6 +610,7 @@ function CompletedTab({
             task={t}
             ctx="completed"
             onToggle={onToggle}
+            onReschedule={onReschedule}
           />
         ))
       )}
@@ -507,9 +623,11 @@ function CompletedTab({
 function UnscheduledTab({
   tasks,
   onToggle,
+  onReschedule,
 }: {
   tasks: Task[];
   onToggle: (id: string) => void;
+  onReschedule: (id: string, newDate: string) => void;
 }) {
   const unscheduled = tasks.filter(
     (t) => t.status !== "done" && !t.due_date
@@ -529,6 +647,7 @@ function UnscheduledTab({
             task={t}
             ctx="unscheduled"
             onToggle={onToggle}
+            onReschedule={onReschedule}
           />
         ))
       )}
@@ -552,6 +671,7 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<TabKey>("upcoming");
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
 
   const today = useMemo(() => localDate(), []);
   const todayPlus6 = useMemo(() => shiftDays(today, 6), [today]);
@@ -575,6 +695,12 @@ export default function Home() {
     fetchAll();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!toast) return;
+    const id = setTimeout(() => setToast(null), 3000);
+    return () => clearTimeout(id);
+  }, [toast]);
 
   async function handleToggle(id: string) {
     const task = tasks.find((t) => t.id === id);
@@ -610,8 +736,32 @@ export default function Home() {
     }
   }
 
+  async function handleReschedule(id: string, newDate: string) {
+    // Optimistic update
+    setTasks((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, due_date: newDate } : t))
+    );
+    setToast("Task rescheduled");
+
+    try {
+      const res = await fetch(`/api/tasks/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ due_date: newDate }),
+      });
+      if (res.ok) {
+        const updated: Task = await res.json();
+        setTasks((prev) => prev.map((t) => (t.id === id ? updated : t)));
+      }
+    } catch {
+      // Keep optimistic state; toast already shown
+    }
+  }
+
   return (
     <div className="min-h-screen bg-[#262624] p-10">
+
+      {toast && <RescheduleToast message={toast} />}
 
       {/* ── Header — full width ── */}
       <div className="flex items-start justify-between pb-8">
@@ -674,6 +824,7 @@ export default function Home() {
                 <UpcomingTab
                   tasks={tasks}
                   onToggle={handleToggle}
+                  onReschedule={handleReschedule}
                   today={today}
                   todayPlus6={todayPlus6}
                 />
@@ -682,14 +833,23 @@ export default function Home() {
                 <ScheduledTab
                   tasks={tasks}
                   onToggle={handleToggle}
+                  onReschedule={handleReschedule}
                   todayPlus7={todayPlus7}
                 />
               )}
               {activeTab === "completed" && (
-                <CompletedTab tasks={tasks} onToggle={handleToggle} />
+                <CompletedTab
+                  tasks={tasks}
+                  onToggle={handleToggle}
+                  onReschedule={handleReschedule}
+                />
               )}
               {activeTab === "unscheduled" && (
-                <UnscheduledTab tasks={tasks} onToggle={handleToggle} />
+                <UnscheduledTab
+                  tasks={tasks}
+                  onToggle={handleToggle}
+                  onReschedule={handleReschedule}
+                />
               )}
             </div>
           )}
