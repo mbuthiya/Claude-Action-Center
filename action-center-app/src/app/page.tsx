@@ -860,6 +860,128 @@ function ActivityHeatmap({ tasks }: { tasks: Task[] }) {
   );
 }
 
+// ─── How it works modal ───────────────────────────────────────────────────────
+
+function HowItWorksModal({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
+
+      {/* Panel */}
+      <div
+        className="relative w-full max-w-lg rounded-2xl overflow-y-auto max-h-[90vh]"
+        style={{ backgroundColor: "#1E1E1C", padding: "32px 28px" }}
+      >
+        {/* Close */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-white/10 text-white/60 hover:bg-white/20 transition-colors cursor-pointer text-lg leading-none"
+        >
+          ×
+        </button>
+
+        <h2 className="text-xl font-semibold text-white mb-1">
+          How it works
+        </h2>
+        <p className="text-sm text-[#C2C0B6] mb-8">
+          Claude Action Center connects your Claude Code conversations to a visual task manager.
+        </p>
+
+        {/* Step 1 */}
+        <div className="mb-7">
+          <div className="flex items-center gap-3 mb-3">
+            <span className="w-7 h-7 rounded-full bg-[#CD7253] flex items-center justify-center text-white text-xs font-bold shrink-0">
+              1
+            </span>
+            <h3 className="text-base font-semibold text-white">
+              Add tasks from Claude Code
+            </h3>
+          </div>
+          <p className="text-sm text-[#C2C0B6] leading-relaxed mb-3 ml-10">
+            While working in any Claude Code project, ask Claude to add a task. Claude will generate a clear title, meaningful notes, and confirm a due date before saving.
+          </p>
+          <div
+            className="ml-10 rounded-lg px-4 py-3 text-sm font-mono text-[#C2C0B6]"
+            style={{ backgroundColor: "#30302E" }}
+          >
+            <span className="text-[#CD7253]">You: </span>
+            <span className="text-white/80">&quot;Add a task to investigate the onboarding drop-off bug&quot;</span>
+            <br />
+            <span className="text-[#CD7253]">Claude: </span>
+            <span className="text-white/60">Confirms title, notes, due date → saves to Action Center</span>
+          </div>
+        </div>
+
+        {/* Step 2 */}
+        <div className="mb-7">
+          <div className="flex items-center gap-3 mb-3">
+            <span className="w-7 h-7 rounded-full bg-[#CD7253] flex items-center justify-center text-white text-xs font-bold shrink-0">
+              2
+            </span>
+            <h3 className="text-base font-semibold text-white">
+              Manage tasks visually here
+            </h3>
+          </div>
+          <p className="text-sm text-[#C2C0B6] leading-relaxed ml-10 mb-3">
+            The Action Center organises your tasks across four views:
+          </p>
+          <div className="ml-10 flex flex-col gap-2.5">
+            {[
+              { label: "Upcoming ≤7 days", desc: "Overdue, due today, and tasks due within the week — your daily focus." },
+              { label: "Scheduled >7 days", desc: "Everything planned further out. Sort by closest or furthest due date." },
+              { label: "Completed", desc: "All finished tasks. Filter by completion date to review any day." },
+              { label: "Unscheduled", desc: "Tasks without a due date. Click the label to schedule them quickly." },
+            ].map(({ label, desc }) => (
+              <div key={label} className="flex gap-3">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#CD7253] mt-2 shrink-0" />
+                <p className="text-sm text-[#C2C0B6] leading-relaxed">
+                  <span className="text-white font-medium">{label}</span> — {desc}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Step 3 */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-3">
+            <span className="w-7 h-7 rounded-full bg-[#CD7253] flex items-center justify-center text-white text-xs font-bold shrink-0">
+              3
+            </span>
+            <h3 className="text-base font-semibold text-white">
+              Quick actions on every task
+            </h3>
+          </div>
+          <div className="ml-10 flex flex-col gap-2.5">
+            {[
+              { action: "Check the circle", desc: "Mark a task done. A completion is recorded on the activity heatmap." },
+              { action: "Click the due date", desc: "Open a reschedule picker to move the task to any date." },
+              { action: "Click a completed task's circle", desc: "Reopen it with a new due date — it lands back in the right tab." },
+              { action: "Click Unscheduled", desc: "Set a due date inline so the task moves into your scheduled views." },
+            ].map(({ action, desc }) => (
+              <div key={action} className="flex gap-3">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#CD7253] mt-2 shrink-0" />
+                <p className="text-sm text-[#C2C0B6] leading-relaxed">
+                  <span className="text-white font-medium">{action}</span> — {desc}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <button
+          onClick={onClose}
+          className="w-full py-3 rounded-full text-white font-semibold text-sm cursor-pointer hover:opacity-90 transition-opacity"
+          style={{ backgroundColor: "#CD7253" }}
+        >
+          Got it
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ─── Tab config ───────────────────────────────────────────────────────────────
 
 const TABS: { key: TabKey; label: string }[] = [
@@ -877,6 +999,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [showHelp, setShowHelp] = useState(false);
 
   const today = useMemo(() => localDate(), []);
   const todayPlus6 = useMemo(() => shiftDays(today, 6), [today]);
@@ -993,6 +1116,7 @@ export default function Home() {
     <div className="min-h-screen bg-[#262624] p-10">
 
       {toast && <RescheduleToast message={toast} />}
+      {showHelp && <HowItWorksModal onClose={() => setShowHelp(false)} />}
 
       {/* ── Header — full width ── */}
       <div className="flex items-start justify-between pb-8">
@@ -1004,12 +1128,15 @@ export default function Home() {
             Manage your action items across multiple Claude code projects
           </p>
         </div>
-        <div className="flex items-center gap-2 text-[#CD7253] shrink-0 ml-8 mt-1">
+        <button
+          onClick={() => setShowHelp(true)}
+          className="flex items-center gap-2 text-[#CD7253] shrink-0 ml-8 mt-1 cursor-pointer hover:opacity-80 transition-opacity"
+        >
           <HelpIcon />
           <span className="text-base font-semibold whitespace-nowrap">
             How does it work
           </span>
-        </div>
+        </button>
       </div>
 
       {/* ── Main content area ── */}
