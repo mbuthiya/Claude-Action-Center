@@ -1,6 +1,9 @@
+
 # Claude Action Center
 
 A personal task manager built for Claude power users. Action items captured mid-conversation via an MCP server surface here as a structured, time-based task list.
+
+![alt text](image.png)
 
 ---
 
