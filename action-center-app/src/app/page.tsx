@@ -525,7 +525,7 @@ function ScheduledTab({
           onClick={() =>
             setSort((s) => (s === "closest" ? "furthest" : "closest"))
           }
-          className="flex items-center gap-2 text-sm text-[#C2C0B6] hover:text-white transition-colors"
+          className="flex items-center gap-2 text-sm text-[#C2C0B6] hover:text-white transition-colors cursor-pointer"
         >
           <FunnelIcon />
           <span>
