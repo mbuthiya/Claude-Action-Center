@@ -735,6 +735,131 @@ function UnscheduledTab({
   );
 }
 
+// ─── Activity heatmap ─────────────────────────────────────────────────────────
+
+const HEATMAP_DAY_LABELS = ["S", "M", "T", "W", "T", "F", "S"];
+const HEATMAP_MIN_YEAR = 2026;
+const HEATMAP_MIN_MONTH = 2;
+
+function getActivityColor(count: number): string {
+  if (count === 0) return "#30302E";
+  if (count < 5) return "rgba(205, 114, 83, 0.2)";
+  if (count < 10) return "rgba(205, 114, 83, 0.6)";
+  return "#CD7253";
+}
+
+function ActivityHeatmap({ tasks }: { tasks: Task[] }) {
+  const now = new Date();
+  const [year, setYear] = useState(now.getFullYear());
+  const [month, setMonth] = useState(now.getMonth() + 1);
+
+  const completions = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const t of tasks) {
+      if (t.status === "done") {
+        const day = datePart(t.updated_at);
+        map[day] = (map[day] ?? 0) + 1;
+      }
+    }
+    return map;
+  }, [tasks]);
+
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const firstDayOfWeek = new Date(year, month - 1, 1).getDay();
+
+  const nowNow = new Date();
+  const atMin = year === HEATMAP_MIN_YEAR && month === HEATMAP_MIN_MONTH;
+  const atMax = year === nowNow.getFullYear() && month === nowNow.getMonth() + 1;
+
+  function goPrev() {
+    if (atMin) return;
+    if (month === 1) { setYear((y) => y - 1); setMonth(12); }
+    else setMonth((m) => m - 1);
+  }
+
+  function goNext() {
+    if (atMax) return;
+    if (month === 12) { setYear((y) => y + 1); setMonth(1); }
+    else setMonth((m) => m + 1);
+  }
+
+  const monthLabel = new Date(year, month - 1).toLocaleString("en-US", { month: "long" });
+
+  const cells: (number | null)[] = [];
+  for (let i = 0; i < firstDayOfWeek; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+
+  return (
+    <div>
+      <p className="text-xs font-semibold text-[#C2C0B6] uppercase tracking-widest mb-5">
+        Activity
+      </p>
+
+      {/* Month/year navigation */}
+      <div className="flex items-center justify-between mb-3">
+        <button
+          onClick={goPrev}
+          disabled={atMin}
+          className={`text-xl leading-none transition-colors ${atMin ? "text-white/20 cursor-default" : "text-[#C2C0B6] hover:text-white cursor-pointer"}`}
+        >
+          ‹
+        </button>
+        <span className="text-sm font-semibold text-[#C2C0B6]">
+          {monthLabel} {year}
+        </span>
+        <button
+          onClick={goNext}
+          disabled={atMax}
+          className={`text-xl leading-none transition-colors ${atMax ? "text-white/20 cursor-default" : "text-[#C2C0B6] hover:text-white cursor-pointer"}`}
+        >
+          ›
+        </button>
+      </div>
+
+      {/* Day-of-week headers */}
+      <div className="grid grid-cols-7 gap-1.5 mb-1.5">
+        {HEATMAP_DAY_LABELS.map((d, i) => (
+          <div key={i} className="text-[10px] text-white/30 text-center">
+            {d}
+          </div>
+        ))}
+      </div>
+
+      {/* Day squares */}
+      <div className="grid grid-cols-7 gap-1.5">
+        {cells.map((d, i) => {
+          if (d === null) return <div key={i} />;
+          const dateStr = `${year}-${String(month).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+          const count = completions[dateStr] ?? 0;
+          return (
+            <div
+              key={i}
+              className="w-8 h-8 rounded-sm flex items-center justify-center"
+              title={`${dateStr}: ${count} task${count !== 1 ? "s" : ""} completed`}
+              style={{ backgroundColor: getActivityColor(count) }}
+            >
+              <span className="text-[10px] text-white/50">{d}</span>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Legend */}
+      <div className="flex items-center gap-2 mt-4">
+        <span className="text-[10px] text-white/30">Less</span>
+        {[0, 2, 6, 11].map((v, i) => (
+          <div
+            key={i}
+            className="w-3 h-3 rounded-sm"
+            style={{ backgroundColor: getActivityColor(v) }}
+          />
+        ))}
+        <span className="text-[10px] text-white/30">More</span>
+      </div>
+    </div>
+  );
+}
+
 // ─── Tab config ───────────────────────────────────────────────────────────────
 
 const TABS: { key: TabKey; label: string }[] = [
@@ -887,8 +1012,10 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ── Constrained content area ── */}
-      <div className="w-1/2">
+      {/* ── Main content area ── */}
+      <div className="flex items-start gap-16">
+
+        <div className="w-1/2 shrink-0">
 
         {/* ── Tab navigation ── */}
         <div className="border-b border-white/10">
@@ -960,6 +1087,13 @@ export default function Home() {
               )}
             </div>
           )}
+        </div>
+
+        </div>
+
+        {/* ── Activity heatmap ── */}
+        <div className="ml-auto pt-14 w-[400px] shrink-0">
+          <ActivityHeatmap tasks={tasks} />
         </div>
 
       </div>
