@@ -525,7 +525,7 @@ function ScheduledTab({
           onClick={() =>
             setSort((s) => (s === "closest" ? "furthest" : "closest"))
           }
-          className="flex items-center gap-2 text-sm text-[#C2C0B6] hover:text-white transition-colors"
+          className="flex items-center gap-2 text-sm text-[#C2C0B6] hover:text-white transition-colors cursor-pointer"
         >
           <FunnelIcon />
           <span>
@@ -550,6 +550,49 @@ function ScheduledTab({
   );
 }
 
+// ─── Date filter tooltip ─────────────────────────────────────────────────────
+
+function DateFilterTooltip({ onApply }: { onApply: (date: string) => void }) {
+  const [selectedDate, setSelectedDate] = useState("");
+
+  return (
+    <div
+      className="absolute left-[calc(100%+8px)] top-0 z-50 rounded-xl flex flex-col gap-4"
+      style={{
+        width: 328,
+        backgroundColor: "#262624",
+        padding: "24px 16px",
+        boxShadow: "0 0 20px rgba(255,255,255,0.08)",
+      }}
+    >
+      <div className="flex flex-col gap-2">
+        <label style={{ fontSize: 14, color: "#ffffff" }}>
+          Filter by date
+        </label>
+        <input
+          type="date"
+          value={selectedDate}
+          onChange={(e) => setSelectedDate(e.target.value)}
+          className="w-full rounded-lg px-3 py-2 outline-none border border-white/10"
+          style={{
+            backgroundColor: "#30302E",
+            color: "#ffffff",
+            fontSize: 16,
+            colorScheme: "dark",
+          }}
+        />
+      </div>
+      <button
+        onClick={() => { if (selectedDate) onApply(selectedDate); }}
+        className="w-full py-3 rounded-full text-white transition-opacity hover:opacity-90 cursor-pointer"
+        style={{ backgroundColor: "#CD7253", fontSize: 16, fontWeight: 500 }}
+      >
+        Apply filter
+      </button>
+    </div>
+  );
+}
+
 // ─── Tab 3: Completed ─────────────────────────────────────────────────────────
 
 function CompletedTab({
@@ -562,6 +605,7 @@ function CompletedTab({
   onReschedule: (id: string, newDate: string) => void;
 }) {
   const [dateFilter, setDateFilter] = useState("");
+  const [filterTooltipOpen, setFilterTooltipOpen] = useState(false);
 
   const completedAll = tasks.filter((t) => t.status === "done");
   const filtered = dateFilter
@@ -572,26 +616,37 @@ function CompletedTab({
     <div>
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold italic text-[#C2C0B6]">Completed</h2>
-        <div className="flex items-center">
+        <div className="relative flex items-center">
           {dateFilter ? (
             <button
               onClick={() => setDateFilter("")}
-              className="flex items-center gap-1.5 text-sm font-semibold text-[#CD7253] hover:opacity-80 transition-opacity"
+              className="flex items-center gap-1.5 text-sm font-semibold text-[#CD7253] hover:opacity-80 transition-opacity cursor-pointer"
             >
               {fmtStatus(dateFilter)}
               <span className="text-base leading-none">✕</span>
             </button>
           ) : (
-            <label className="flex items-center gap-2 text-sm text-[#C2C0B6] hover:text-white cursor-pointer transition-colors">
+            <button
+              onClick={() => setFilterTooltipOpen(true)}
+              className="flex items-center gap-2 text-sm text-[#C2C0B6] hover:text-white transition-colors cursor-pointer"
+            >
               <CalendarIcon />
               <span>Select date</span>
-              <input
-                type="date"
-                value={dateFilter}
-                onChange={(e) => setDateFilter(e.target.value)}
-                className="sr-only"
+            </button>
+          )}
+          {filterTooltipOpen && (
+            <>
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setFilterTooltipOpen(false)}
               />
-            </label>
+              <DateFilterTooltip
+                onApply={(date) => {
+                  setDateFilter(date);
+                  setFilterTooltipOpen(false);
+                }}
+              />
+            </>
           )}
         </div>
       </div>
